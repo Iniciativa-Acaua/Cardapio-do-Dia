@@ -9,11 +9,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-br"
     >
-      <body >
+      <body className="bg-neutral-950 text-white antialiased">
         <Header/>
-
         {children}
-
         <Footer/>
       </body>
     </html>
