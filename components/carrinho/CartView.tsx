@@ -4,14 +4,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-store";
-import { formatBRL } from "@/lib/format";
+import { formatCents } from "@/lib/format";
 
 const WHATSAPP_NUMBER = "5511999999999"; // troque pelo número real (DDI + DDD + número)
 
 export default function CartView() {
   const { items, increase, decrease, removeItem, clear } = useCart();
 
-  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const totalCents = items.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0);
 
   if (items.length === 0) {
     return (
@@ -30,23 +30,27 @@ export default function CartView() {
   const message =
     "Olá! Gostaria de fazer o seguinte pedido:\n\n" +
     items
-      .map((i) => `${i.quantity}x ${i.name} - ${formatBRL(i.price * i.quantity)}`)
+      .map((i) => {
+        const extras = i.addons.length
+          ? ` (${i.addons.map((a) => a.name).join(", ")})`
+          : "";
+        return `${i.quantity}x ${i.name}${extras} - ${formatCents(i.unitPriceCents * i.quantity)}`;
+      })
       .join("\n") +
-    `\n\nTotal: ${formatBRL(total)}`;
+    `\n\nTotal: ${formatCents(totalCents)}`;
 
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-      {/* Lista de itens */}
       <ul className="space-y-4">
         {items.map((item) => (
           <li
-            key={item.id}
+            key={item.key}
             className="flex items-center gap-4 rounded-2xl bg-white p-4 text-neutral-900"
           >
             <Image
-              src={item.image}
+              src={item.imageUrl}
               alt={item.name}
               width={80}
               height={80}
@@ -55,12 +59,17 @@ export default function CartView() {
 
             <div className="flex-1">
               <h2 className="font-bold">{item.name}</h2>
-              <p className="text-sm text-neutral-600">{formatBRL(item.price)}</p>
+              {item.addons.length > 0 && (
+                <p className="text-xs text-neutral-500">
+                  + {item.addons.map((a) => a.name).join(", ")}
+                </p>
+              )}
+              <p className="text-sm text-neutral-600">{formatCents(item.unitPriceCents)}</p>
 
               <div className="mt-2 flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => decrease(item.id)}
+                  onClick={() => decrease(item.key)}
                   aria-label={`Diminuir quantidade de ${item.name}`}
                   className="h-8 w-8 rounded-full border border-neutral-300 font-bold transition hover:bg-neutral-100"
                 >
@@ -69,7 +78,7 @@ export default function CartView() {
                 <span className="min-w-6 text-center font-semibold">{item.quantity}</span>
                 <button
                   type="button"
-                  onClick={() => increase(item.id)}
+                  onClick={() => increase(item.key)}
                   aria-label={`Aumentar quantidade de ${item.name}`}
                   className="h-8 w-8 rounded-full border border-neutral-300 font-bold transition hover:bg-neutral-100"
                 >
@@ -80,11 +89,11 @@ export default function CartView() {
 
             <div className="flex flex-col items-end gap-2">
               <span className="font-extrabold">
-                {formatBRL(item.price * item.quantity)}
+                {formatCents(item.unitPriceCents * item.quantity)}
               </span>
               <button
                 type="button"
-                onClick={() => removeItem(item.id)}
+                onClick={() => removeItem(item.key)}
                 className="text-sm text-red-600 hover:underline"
               >
                 Remover
@@ -94,12 +103,11 @@ export default function CartView() {
         ))}
       </ul>
 
-      {/* Resumo */}
       <aside className="h-fit rounded-2xl border border-white/10 bg-white/5 p-6 lg:sticky lg:top-24">
         <h2 className="mb-4 text-xl font-extrabold text-white">Resumo</h2>
         <div className="mb-6 flex items-center justify-between text-lg">
           <span className="text-neutral-300">Total</span>
-          <span className="font-extrabold text-white">{formatBRL(total)}</span>
+          <span className="font-extrabold text-white">{formatCents(totalCents)}</span>
         </div>
 
         <a

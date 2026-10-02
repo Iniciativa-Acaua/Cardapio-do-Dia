@@ -1,9 +1,9 @@
-// components/produto/ProductGrid.tsx
+// components/produto/ProductGrid.tsx (agora assíncrono, ainda Server Component)
 import ProductCard from "./ProdutosCard";
-import { products } from "@/lib/products";
+import { getFeaturedProducts } from "@/lib/queries/catalog";
 
-export default function ProductGrid() {
-  const featured = [...products].sort((a, b) => b.rating - a.rating).slice(0, 4);
+export default async function ProductGrid() {
+  const featured = await getFeaturedProducts(4);
 
   return (
     <section id="destaques" className="mx-auto max-w-6xl px-6 py-16">

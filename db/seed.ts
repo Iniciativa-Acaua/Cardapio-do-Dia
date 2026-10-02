@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { inArray } from "drizzle-orm";
 import { Pool } from "pg";
 import { categories, products, productAddons, businessHours } from "./schema";
-import { products as legacy } from "../lib/products";
+import { seedProducts as legacy } from "./seed-data";
 
 const slugify = (s: string) =>
   s

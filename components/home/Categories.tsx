@@ -1,8 +1,10 @@
 // components/home/Categories.tsx
 import Link from "next/link";
-import { categories } from "@/lib/products";
+import { getCategories } from "@/lib/queries/catalog";
 
-export default function Categories() {
+export default async function Categories() {
+  const categories = await getCategories();
+
   return (
     <section className="mx-auto max-w-6xl px-6 py-12">
       <h2 className="mb-6 text-3xl font-extrabold text-white">
@@ -11,11 +13,11 @@ export default function Categories() {
       <div className="flex flex-wrap gap-3">
         {categories.map((c) => (
           <Link
-            key={c}
-            href={{ pathname: "/cardapio", query: { categoria: c } }}
+            key={c.id}
+            href={{ pathname: "/cardapio", query: { categoria: c.slug } }}
             className="rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition hover:border-orange-500 hover:bg-orange-500"
           >
-            {c}
+            {c.name}
           </Link>
         ))}
       </div>

@@ -1,10 +1,11 @@
+// components/produto/AddToCartButton.tsx
 "use client";
 
 import { useCart } from "@/lib/cart-store";
-import type { Product } from "@/types/product";
+import type { ProductSummary } from "@/types/product";
 
 type Props = {
-  product: Pick<Product, "id" | "name" | "price" | "image">;
+  product: Pick<ProductSummary, "id" | "slug" | "name" | "priceCents" | "imageUrl">;
 };
 
 export default function AddToCartButton({ product }: Props) {

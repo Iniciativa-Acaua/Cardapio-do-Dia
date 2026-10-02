@@ -7,6 +7,8 @@ import Testimonials from "@/components/home/Testimonials";
 import LocationHours from "@/components/home/LocationHours";
 import CallToAction from "@/components/home/CallToAction";
 
+export const revalidate = 60;
+
 export default function Home() {
   return (
     <>

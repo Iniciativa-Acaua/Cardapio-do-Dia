@@ -1,18 +1,21 @@
 // types/product.ts
 export type Addon = {
-  id: number;
+  id: string;
   name: string;
-  price: number;
+  priceCents: number;
 };
 
-export type Product = {
-  id: number;
+export type ProductSummary = {
+  id: string;
   slug: string;
   name: string;
   description: string;
   category: string;
-  price: number;
-  rating: number;
-  image: string;
-  addons?: Addon[];
+  categorySlug: string;
+  priceCents: number;
+  ratingAvg: number;
+  ratingCount: number;
+  imageUrl: string;
 };
+
+export type ProductDetail = ProductSummary & { addons: Addon[] };
