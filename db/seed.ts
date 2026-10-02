@@ -2,7 +2,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { inArray } from "drizzle-orm";
 import { Pool } from "pg";
-import { categories, products, productAddons, businessHours } from "./schema";
+import { categories, products, productAddons, businessHours, deliveryZones } from "./schema";
 import { seedProducts as legacy } from "./seed-data";
 
 const slugify = (s: string) =>
@@ -69,9 +69,20 @@ async function main() {
     ])
     .onConflictDoNothing();
 
+
+  await db
+    .insert(deliveryZones)
+    .values([
+      { name: "Centro", neighborhood: "Centro", feeCents: 500, minOrderCents: 0 },
+      { name: "Zona Norte", neighborhood: "Zona Norte", feeCents: 800, minOrderCents: 2000 },
+      { name: "Zona Sul", neighborhood: "Zona Sul", feeCents: 800, minOrderCents: 2000 },
+    ])
+    .onConflictDoNothing();
+
   await pool.end();
   console.log("Seed concluído.");
 }
+
 
 main().catch((err) => {
   console.error(err);

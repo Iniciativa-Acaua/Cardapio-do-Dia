@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useCart } from "@/lib/cart-store";
 import { formatCents } from "@/lib/format";
 
-const WHATSAPP_NUMBER = "5511999999999"; // troque pelo número real (DDI + DDD + número)
 
 export default function CartView() {
   const { items, increase, decrease, removeItem, clear } = useCart();
@@ -26,20 +25,6 @@ export default function CartView() {
       </div>
     );
   }
-
-  const message =
-    "Olá! Gostaria de fazer o seguinte pedido:\n\n" +
-    items
-      .map((i) => {
-        const extras = i.addons.length
-          ? ` (${i.addons.map((a) => a.name).join(", ")})`
-          : "";
-        return `${i.quantity}x ${i.name}${extras} - ${formatCents(i.unitPriceCents * i.quantity)}`;
-      })
-      .join("\n") +
-    `\n\nTotal: ${formatCents(totalCents)}`;
-
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
@@ -110,14 +95,12 @@ export default function CartView() {
           <span className="font-extrabold text-white">{formatCents(totalCents)}</span>
         </div>
 
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/checkout"
           className="block rounded-full bg-orange-500 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-600"
         >
-          Finalizar pelo WhatsApp
-        </a>
+          Finalizar pedido
+        </Link>
         <button
           type="button"
           onClick={clear}
