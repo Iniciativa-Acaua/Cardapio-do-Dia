@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { fulfillmentType, orderStatus, paymentMethod, paymentStatus } from "./enums";
 import { timestamps } from "./helpers";
-import { users, addresses } from "./users";
+import { addresses } from "./addresses";
 import { products, productAddons } from "./catalog";
 import { coupons, deliveryZones } from "./store";
 import { user } from "./auth-schema";
@@ -24,7 +24,7 @@ export const orders = pgTable(
     // número amigável para o cliente ("Pedido #1001")
     orderNumber: integer("order_number").generatedAlwaysAsIdentity({ startWith: 1001 }),
     // opcional: permite pedido sem login, e o histórico sobrevive à exclusão da conta
-    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }),
     customerName: text("customer_name").notNull(),
     customerPhone: text("customer_phone").notNull(),
     addressId: uuid("address_id").references(() => addresses.id, { onDelete: "set null" }),
@@ -116,7 +116,7 @@ export const orderStatusHistory = pgTable(
       .notNull()
       .references(() => orders.id, { onDelete: "cascade" }),
     status: orderStatus("status").notNull(),
-    changedBy: uuid("changed_by").references(() => users.id, { onDelete: "set null" }),
+    changedBy: uuid("changed_by").references(() => user.id, { onDelete: "set null" }),
     note: text("note"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

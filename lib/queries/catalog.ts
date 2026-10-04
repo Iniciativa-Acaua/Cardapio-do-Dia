@@ -3,7 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { and, asc, desc, eq, or, sql, type SQL, type SQLWrapper } from "drizzle-orm";
 import { db } from "@/db";
-import { categories, products, productAddons, reviews, users } from "@/db/schema";
+import { categories, products, productAddons, reviews, user } from "@/db/schema";
 import type { ProductDetail, ProductSummary } from "@/types/product";
 
 export type Ordem = "relevancia" | "preco-asc" | "preco-desc" | "nota";
@@ -112,13 +112,13 @@ export async function getApprovedReviews(productId: string) {
   return db
     .select({
       id: reviews.id,
-      author: users.name,
+      author: user.name,
       rating: reviews.rating,
       comment: reviews.comment,
       createdAt: reviews.createdAt,
     })
     .from(reviews)
-    .innerJoin(users, eq(reviews.userId, users.id))
+    .innerJoin(user, eq(reviews.userId, user.id))
     .where(and(eq(reviews.productId, productId), eq(reviews.status, "approved")))
     .orderBy(desc(reviews.createdAt))
     .limit(20);

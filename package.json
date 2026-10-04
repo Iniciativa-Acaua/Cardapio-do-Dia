@@ -24,6 +24,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.6.0",
     "@iconify-json/entypo-social": "^1.2.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

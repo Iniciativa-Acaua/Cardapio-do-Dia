@@ -6,10 +6,18 @@ import * as schema from "@/db/schema";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
+  advanced: {
+    database: { generateId: "uuid" },
+  },
+  user: {
+    additionalFields: {
+      role: { type: "string", defaultValue: "customer", input: false },
+      phone: { type: "string", required: false },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
   },
-  // nextCookies deve ser sempre o último plugin
   plugins: [nextCookies()],
 });

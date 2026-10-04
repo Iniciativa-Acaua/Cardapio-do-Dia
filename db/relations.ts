@@ -10,12 +10,12 @@ export const relations = defineRelations(schema, (r) => ({
     loyaltyTransactions: r.many.loyaltyTransactions(),
     notifications: r.many.notifications(),
     favoriteProducts: r.many.products({
-      from: r.users.id.through(r.favorites.userId),
+      from: r.user.id.through(r.favorites.userId),
       to: r.products.id.through(r.favorites.productId),
     }),
   },
   addresses: {
-    user: r.one.users({ from: r.addresses.userId, to: r.users.id, optional: false }),
+    user: r.one.user({ from: r.addresses.userId, to: r.user.id, optional: false }),
   },
 
   categories: {
@@ -39,7 +39,7 @@ export const relations = defineRelations(schema, (r) => ({
   },
 
   orders: {
-    user: r.one.users({ from: r.orders.userId, to: r.users.id }),
+    user: r.one.user({ from: r.orders.userId, to: r.user.id }),
     address: r.one.addresses({ from: r.orders.addressId, to: r.addresses.id }),
     coupon: r.one.coupons({ from: r.orders.couponId, to: r.coupons.id }),
     deliveryZone: r.one.deliveryZones({
@@ -77,27 +77,27 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.orders.id,
       optional: false,
     }),
-    changedByUser: r.one.users({
+    changedByUser: r.one.user({
       from: r.orderStatusHistory.changedBy,
-      to: r.users.id,
+      to: r.user.id,
     }),
   },
 
   reviews: {
-    user: r.one.users({ from: r.reviews.userId, to: r.users.id, optional: false }),
+    user: r.one.user({ from: r.reviews.userId, to: r.user.id, optional: false }),
     product: r.one.products({ from: r.reviews.productId, to: r.products.id, optional: false }),
     order: r.one.orders({ from: r.reviews.orderId, to: r.orders.id }),
   },
   loyaltyTransactions: {
-    user: r.one.users({
+    user: r.one.user({
       from: r.loyaltyTransactions.userId,
-      to: r.users.id,
+      to: r.user.id,
       optional: false,
     }),
     order: r.one.orders({ from: r.loyaltyTransactions.orderId, to: r.orders.id }),
   },
   notifications: {
-    user: r.one.users({ from: r.notifications.userId, to: r.users.id, optional: false }),
+    user: r.one.user({ from: r.notifications.userId, to: r.user.id, optional: false }),
     order: r.one.orders({ from: r.notifications.orderId, to: r.orders.id }),
   },
 }));
