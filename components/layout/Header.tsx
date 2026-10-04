@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import CartBadge from "@/components/CartBadge";
+import MenuConta from "@/components/auth/MenuConta";
 
 const navigation = [
   { label: "Início", href: "/" },
@@ -57,6 +58,11 @@ export default function Header() {
           />
           <CartBadge />
         </Link>
+
+        {/* Menu de conta */}
+        <div className="shrink-0">
+          <MenuConta />
+        </div>
       </div>
     </header>
   );
