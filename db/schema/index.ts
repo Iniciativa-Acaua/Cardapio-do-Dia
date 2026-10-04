@@ -5,3 +5,4 @@ export * from "./catalog";
 export * from "./store";
 export * from "./orders";
 export * from "./engagement";
+export * from "./auth-schema";

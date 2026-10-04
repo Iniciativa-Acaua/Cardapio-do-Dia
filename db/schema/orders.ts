@@ -15,6 +15,7 @@ import { timestamps } from "./helpers";
 import { users, addresses } from "./users";
 import { products, productAddons } from "./catalog";
 import { coupons, deliveryZones } from "./store";
+import { user } from "./auth-schema";
 
 export const orders = pgTable(
   "orders",
