@@ -18,6 +18,7 @@ import {
 } from "@/db/schema";
 import { getOpenStatus } from "@/lib/queries/store";
 import { formatCents } from "@/lib/format";
+import { getSession } from "@/lib/session";
 
 export type CheckoutState = {
   error?: string;
@@ -189,6 +190,9 @@ export async function createOrder(
 
   const totalCents = subtotalCents + deliveryFeeCents;
 
+  // quem está logado (visitante continua podendo comprar)
+  const session = await getSession();
+
   // 6) grava tudo numa transação
   let orderId: string;
   try {
@@ -196,6 +200,7 @@ export async function createOrder(
       const [created] = await tx
         .insert(orders)
         .values({
+          userId: session?.user.id ?? null,
           customerName: data.customerName,
           customerPhone: data.customerPhone,
           fulfillmentType: data.fulfillmentType,
