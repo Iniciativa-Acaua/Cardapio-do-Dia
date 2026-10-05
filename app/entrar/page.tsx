@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation";
+import AuthLayout from "@/components/auth/AuthLayout";
 import FormEntrar from "@/components/auth/FormEntrar";
 import { getSession } from "@/lib/session";
 
 function destinoSeguro(valor?: string) {
-  return valor && valor.startsWith("/") && !valor.startsWith("//")
-    ? valor
-    : "/";
+  return valor && valor.startsWith("/") && !valor.startsWith("//") ? valor : "/";
 }
 
 export default async function PaginaEntrar({
@@ -19,9 +18,11 @@ export default async function PaginaEntrar({
   if (await getSession()) redirect(redirectTo);
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <h1 className="mb-6 text-2xl font-bold">Entrar na sua conta</h1>
+    <AuthLayout
+      titulo="Bem-vindo de volta"
+      subtitulo="Entre para acompanhar seus pedidos e pedir mais rápido."
+    >
       <FormEntrar redirectTo={redirectTo} />
-    </main>
+    </AuthLayout>
   );
 }

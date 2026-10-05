@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-export default function BotaoSair() {
+export default function BotaoSair({ className = "" }: { className?: string }) {
   const router = useRouter();
 
   async function sair() {
@@ -13,7 +13,7 @@ export default function BotaoSair() {
   }
 
   return (
-    <button type="button" onClick={sair}>
+    <button type="button" onClick={sair} className={className}>
       Sair
     </button>
   );
