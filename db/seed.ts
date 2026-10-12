@@ -50,8 +50,12 @@ const statusMessages: Record<OrderStatus, string> = {
 };
 
 async function main() {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Seed bloqueado em produção.");
+  const allowedHost = process.env.SEED_ALLOWED_HOST;
+  const currentHost = new URL(process.env.DATABASE_URL!).hostname;
+  if (process.env.NODE_ENV === "production" || !allowedHost || currentHost !== allowedHost) {
+    throw new Error(
+      `Seed bloqueado: o banco "${currentHost}" não é o autorizado em SEED_ALLOWED_HOST.`
+    );
   }
 
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });

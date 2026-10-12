@@ -18,6 +18,7 @@ import {
 } from "@/db/schema";
 import { getOpenStatus } from "@/lib/queries/store";
 import { formatCents } from "@/lib/format";
+import { criarCobrancaOnline } from "@/lib/payments";
 import { getSession } from "@/lib/session";
 
 export type CheckoutState = {
@@ -44,7 +45,11 @@ const formSchema = z.object({
         .max(11, "Telefone inválido. Use DDD + número.")
     ),
   fulfillmentType: z.enum(["delivery", "pickup"]),
-  paymentMethod: z.enum(["pix", "credit_card", "debit_card", "cash"], "Escolha a forma de pagamento."),
+  // online = pago pelo site (Mercado Pago); os demais = pagamento na entrega/retirada
+  paymentMethod: z.enum(
+    ["online", "pix", "credit_card", "debit_card", "cash"],
+    "Escolha a forma de pagamento."
+  ),
   zoneId: z.string().optional(),
   street: z.string().trim().max(120).optional(),
   number: z.string().trim().max(20).optional(),
@@ -194,9 +199,9 @@ export async function createOrder(
   const session = await getSession();
 
   // 6) grava tudo numa transação
-  let orderId: string;
+  let order: { id: string; orderNumber: number };
   try {
-    orderId = await db.transaction(async (tx) => {
+    order = await db.transaction(async (tx) => {
       const [created] = await tx
         .insert(orders)
         .values({
@@ -213,7 +218,7 @@ export async function createOrder(
           totalCents,
           notes: data.notes || null,
         })
-        .returning({ id: orders.id });
+        .returning({ id: orders.id, orderNumber: orders.orderNumber });
 
       await tx.insert(orderItems).values(
         lines.map((l) => ({
@@ -248,13 +253,44 @@ export async function createOrder(
         status: "pending",
       });
 
-      return created.id;
+      return { id: created.id, orderNumber: created.orderNumber };
     });
   } catch (err) {
     console.error("Erro ao criar pedido:", err);
     return { error: "Não foi possível registrar o pedido agora. Tente novamente em instantes.", values };
   }
 
+  // 7) pagamento online: cria a cobrança no Mercado Pago
+  if (data.paymentMethod === "online") {
+    let checkoutUrl: string | null = null;
+    try {
+      checkoutUrl = await criarCobrancaOnline({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        items: [
+          ...lines.map((l) => ({
+            id: l.product.id,
+            title: l.addons.length
+              ? `${l.product.name} (+ ${l.addons.map((a) => a.name).join(", ")})`
+              : l.product.name,
+            quantity: l.quantity,
+            unitPriceCents:
+              l.product.priceCents + l.addons.reduce((s, a) => s + a.priceCents, 0),
+          })),
+          ...(deliveryFeeCents > 0
+            ? [{ id: "entrega", title: "Taxa de entrega", quantity: 1, unitPriceCents: deliveryFeeCents }]
+            : []),
+        ],
+      });
+    } catch (err) {
+      console.error("Erro ao criar cobrança no Mercado Pago:", err);
+    }
+
+    // o pedido já existe: se a cobrança falhar, a tela do pedido oferece "tentar de novo"
+    if (!checkoutUrl) redirect(`/pedido/${order.id}?pagamento=erro`);
+    redirect(checkoutUrl);
+  }
+
   // fora do try/catch: redirect() funciona lançando uma exceção interna
-  redirect(`/pedido/${orderId}`);
+  redirect(`/pedido/${order.id}`);
 }

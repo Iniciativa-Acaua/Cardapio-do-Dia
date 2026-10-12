@@ -53,6 +53,11 @@ export default function CheckoutForm({ zones, open }: { zones: Zone[]; open: boo
   const v = state.values ?? {};
   const fe = state.fieldErrors ?? {};
 
+  // online = paga agora pelo Mercado Pago; delivery = paga ao receber ou retirar
+  const [payTiming, setPayTiming] = useState<"online" | "delivery">(
+    v.paymentMethod && v.paymentMethod !== "online" ? "delivery" : "online"
+  );
+
   const subtotalCents = items.reduce((sum, i) => sum + i.unitPriceCents * i.quantity, 0);
   const zone = zones.find((z) => z.id === zoneId);
   const feeCents = fulfillment === "delivery" && zone ? zone.feeCents : 0;
@@ -82,6 +87,8 @@ export default function CheckoutForm({ zones, open }: { zones: Zone[]; open: boo
       </div>
     );
   }
+
+  const quandoPagar = fulfillment === "delivery" ? "Pagar na entrega" : "Pagar na retirada";
 
   return (
     <form action={formAction} className="grid gap-8 lg:grid-cols-[1fr_340px]">
@@ -177,19 +184,60 @@ export default function CheckoutForm({ zones, open }: { zones: Zone[]; open: boo
 
         <fieldset className="space-y-4">
           <legend className="mb-2 text-xl font-extrabold text-white">Pagamento</legend>
-          <Field label="Forma de pagamento (na entrega ou retirada)" error={fe.paymentMethod}>
-            <select
-              name="paymentMethod"
-              defaultValue={v.paymentMethod ?? ""}
-              className={`${inputClass} bg-neutral-900`}
-            >
-              <option value="">Selecione...</option>
-              <option value="pix">Pix</option>
-              <option value="credit_card">Cartão de crédito</option>
-              <option value="debit_card">Cartão de débito</option>
-              <option value="cash">Dinheiro</option>
-            </select>
-          </Field>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(
+              [
+                ["online", "Pagar online agora", "Pix ou cartão, pelo Mercado Pago"],
+                ["delivery", quandoPagar, "Dinheiro, Pix ou maquininha"],
+              ] as const
+            ).map(([value, titulo, dica]) => (
+              <label
+                key={value}
+                className={`cursor-pointer rounded-xl border px-4 py-3 transition ${
+                  payTiming === value
+                    ? "border-orange-500 bg-orange-500/10"
+                    : "border-white/15 bg-white/5 hover:border-orange-500"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payTiming"
+                  value={value}
+                  checked={payTiming === value}
+                  onChange={() => setPayTiming(value)}
+                  className="sr-only"
+                />
+                <span className="block text-sm font-semibold text-white">{titulo}</span>
+                <span className="mt-0.5 block text-xs text-neutral-400">{dica}</span>
+              </label>
+            ))}
+          </div>
+
+          {payTiming === "online" ? (
+            <>
+              <input type="hidden" name="paymentMethod" value="online" />
+              <p className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-neutral-300">
+                Ao confirmar, você será levado ao Mercado Pago para pagar com Pix ou cartão. O pedido só
+                é confirmado depois que o pagamento for aprovado.
+              </p>
+            </>
+          ) : (
+            <Field label="Como você vai pagar?" error={fe.paymentMethod}>
+              <select
+                name="paymentMethod"
+                defaultValue={v.paymentMethod && v.paymentMethod !== "online" ? v.paymentMethod : ""}
+                className={`${inputClass} bg-neutral-900`}
+              >
+                <option value="">Selecione...</option>
+                <option value="pix">Pix</option>
+                <option value="credit_card">Cartão de crédito</option>
+                <option value="debit_card">Cartão de débito</option>
+                <option value="cash">Dinheiro</option>
+              </select>
+            </Field>
+          )}
+
           <Field label="Observações (opcional)" error={fe.notes}>
             <textarea
               name="notes"
@@ -247,7 +295,13 @@ export default function CheckoutForm({ zones, open }: { zones: Zone[]; open: boo
           disabled={pending || !open}
           className="mt-6 w-full rounded-full bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {pending ? "Enviando pedido..." : "Confirmar pedido"}
+          {pending
+            ? payTiming === "online"
+              ? "Redirecionando..."
+              : "Enviando pedido..."
+            : payTiming === "online"
+              ? "Pagar agora"
+              : "Confirmar pedido"}
         </button>
         <Link href="/carrinho" className="mt-3 block text-center text-sm text-neutral-400 hover:text-white">
           Voltar ao carrinho

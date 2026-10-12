@@ -20,6 +20,7 @@ export async function getOrderConfirmation(id: string) {
     db
       .select({
         id: orders.id,
+        userId: orders.userId,
         orderNumber: orders.orderNumber,
         status: orders.status,
         fulfillmentType: orders.fulfillmentType,
@@ -56,7 +57,11 @@ export async function getOrderConfirmation(id: string) {
       .innerJoin(orderItems, eq(orderItemAddons.orderItemId, orderItems.id))
       .where(eq(orderItems.orderId, id)),
     db
-      .select({ method: payments.method, status: payments.status })
+      .select({
+        method: payments.method,
+        status: payments.status,
+        providerMethod: payments.providerMethod,
+      })
       .from(payments)
       .where(eq(payments.orderId, id))
       .limit(1),
@@ -77,4 +82,14 @@ export async function getOrderConfirmation(id: string) {
   });
 
   return { order, lines, payment: paymentRows[0] ?? null, history };
+}
+
+// pedido de visitante abre pelo link; pedido de uma conta só para o dono ou a equipe
+export function podeAcessarPedido(
+  donoId: string | null,
+  usuario?: { id: string; role?: string | null } | null
+) {
+  if (!donoId) return true;
+  if (!usuario) return false;
+  return usuario.id === donoId || usuario.role === "admin" || usuario.role === "staff";
 }

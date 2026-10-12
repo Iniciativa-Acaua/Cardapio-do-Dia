@@ -14,4 +14,5 @@ export const paymentLabels: Record<string, string> = {
   credit_card: "Cartão de crédito",
   debit_card: "Cartão de débito",
   cash: "Dinheiro",
+  online: "Online (Mercado Pago)",
 };

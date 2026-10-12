@@ -13,7 +13,13 @@ export const orderStatus = pgEnum("order_status", [
   "delivered",
   "cancelled",
 ]);
-export const paymentMethod = pgEnum("payment_method", ["pix", "credit_card", "debit_card", "cash"]);
+export const paymentMethod = pgEnum("payment_method", [
+  "pix",
+  "credit_card",
+  "debit_card",
+  "cash",
+  "online",
+]);
 export const paymentStatus = pgEnum("payment_status", ["pending", "paid", "failed", "refunded"]);
 export const discountType = pgEnum("discount_type", ["percent", "fixed"]);
 export const loyaltyType = pgEnum("loyalty_type", ["earn", "redeem", "adjust"]);

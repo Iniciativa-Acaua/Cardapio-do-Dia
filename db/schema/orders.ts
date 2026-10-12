@@ -98,6 +98,7 @@ export const payments = pgTable(
     method: paymentMethod("method").notNull(),
     status: paymentStatus("status").notNull().default("pending"),
     providerRef: text("provider_ref"), // id da transação no gateway
+    providerMethod: text("provider_method"), // o que o cliente usou no gateway: pix, credit_card...
     amountCents: integer("amount_cents").notNull(),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     ...timestamps,
