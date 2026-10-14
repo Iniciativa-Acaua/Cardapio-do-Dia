@@ -168,7 +168,7 @@ export default async function PedidoPage({ params, searchParams }: Props) {
       <div className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-6">
         <h2 className="mb-4 text-xl font-extrabold text-white">Acompanhamento</h2>
         <p className="mb-4 inline-block rounded-full bg-orange-500 px-4 py-1.5 text-sm font-semibold text-white">
-          {statusLabels[order.status] ?? order.status}
+          {rotuloStatus}
         </p>
         <ol className="space-y-2 text-sm text-neutral-300">
           {history.map((h, i) => (
