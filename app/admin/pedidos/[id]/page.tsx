@@ -239,7 +239,7 @@ export default async function PedidoAdmin({ params }: { params: Promise<{ id: st
           </Cartao>
         </div>
 
-        <aside className="order-first space-y-6 lg:order-none lg:sticky lg:top-24 lg:h-fit">
+        <aside className="order-first space-y-6 lg:order-0 lg:sticky lg:top-24 lg:h-fit">
           {(avancos.length > 0 || podeCancelar) && (
             <Cartao titulo="Ações">
               {onlineNaoPago && (

@@ -4,8 +4,10 @@ import FormCadastro from "@/components/auth/FormCadastro";
 export default function PaginaCadastro() {
   return (
     <AuthLayout
-      titulo="Crie sua conta"
-      subtitulo="Leva menos de um minuto e você acompanha todos os seus pedidos."
+      rotulo="Sua conta"
+      titulo="Bem-vindo"
+      destaque="de volta"
+      subtitulo="Entre para acompanhar seus pedidos e pedir mais rápido."
     >
       <FormCadastro redirectTo="/" />
     </AuthLayout>

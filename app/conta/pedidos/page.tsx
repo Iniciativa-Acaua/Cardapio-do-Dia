@@ -2,9 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { orderItems, orders } from "@/db/schema";
+import { orderItems, orders, payments } from "@/db/schema";
 import { formatCents } from "@/lib/format";
+import { botaoPrimario, cartao, eyebrow } from "@/lib/estilos";
+import { estadoParaCliente, STATUS_ABERTOS } from "@/lib/pedido-cliente";
 import { getSession } from "@/lib/session";
+
+export const dynamic = "force-dynamic";
 
 const dataHora = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -12,24 +16,53 @@ const dataHora = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
 });
 
-const statusInfo: Record<
-  (typeof orders.$inferSelect)["status"],
-  { rotulo: string; classe: string }
-> = {
-  pending: { rotulo: "Aguardando confirmação", classe: "bg-amber-500/15 text-amber-300" },
-  confirmed: { rotulo: "Confirmado", classe: "bg-sky-500/15 text-sky-300" },
-  preparing: { rotulo: "Em preparo", classe: "bg-orange-500/15 text-orange-300" },
-  ready: { rotulo: "Pronto", classe: "bg-emerald-500/15 text-emerald-300" },
-  out_for_delivery: { rotulo: "Saiu para entrega", classe: "bg-violet-500/15 text-violet-300" },
-  delivered: { rotulo: "Entregue", classe: "bg-emerald-500/15 text-emerald-300" },
-  cancelled: { rotulo: "Cancelado", classe: "bg-red-500/15 text-red-300" },
+type Pedido = {
+  id: string;
+  orderNumber: number;
+  status: (typeof orders.$inferSelect)["status"];
+  fulfillmentType: "delivery" | "pickup";
+  totalCents: number;
+  createdAt: Date;
+  metodo: string | null;
+  pagStatus: string | null;
 };
+
+function CartaoPedido({ p, resumo }: { p: Pedido; resumo: string }) {
+  const e = estadoParaCliente(p);
+
+  return (
+    <li>
+      <Link href={`/pedido/${p.id}`} className={`${cartao} block transition hover:border-orange-500`}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xl font-extrabold text-white">
+              Pedido <span className="text-orange-500">#{p.orderNumber}</span>
+            </p>
+            <p className="text-xs text-neutral-400">
+              {dataHora.format(p.createdAt)} · {p.fulfillmentType === "delivery" ? "Entrega" : "Retirada"}
+            </p>
+          </div>
+          <span className={`rounded-full px-3 py-1 text-xs font-medium ${e.classe}`}>{e.rotulo}</span>
+        </div>
+
+        {resumo && <p className="mt-3 text-sm text-neutral-300">{resumo}</p>}
+
+        <div className="mt-4 flex items-center justify-between gap-4 border-t border-white/10 pt-4">
+          <span className="text-sm font-semibold text-orange-500">
+            {e.pagar ? "Finalizar pagamento →" : "Ver pedido →"}
+          </span>
+          <span className="text-lg font-extrabold text-white">{formatCents(p.totalCents)}</span>
+        </div>
+      </Link>
+    </li>
+  );
+}
 
 export default async function PaginaPedidos() {
   const session = await getSession();
   if (!session) redirect("/entrar?redirect=/conta/pedidos");
 
-  const meusPedidos = await db
+  const meusPedidos: Pedido[] = await db
     .select({
       id: orders.id,
       orderNumber: orders.orderNumber,
@@ -37,8 +70,11 @@ export default async function PaginaPedidos() {
       fulfillmentType: orders.fulfillmentType,
       totalCents: orders.totalCents,
       createdAt: orders.createdAt,
+      metodo: payments.method,
+      pagStatus: payments.status,
     })
     .from(orders)
+    .leftJoin(payments, eq(payments.orderId, orders.id))
     .where(eq(orders.userId, session.user.id))
     .orderBy(desc(orders.createdAt))
     .limit(50);
@@ -69,67 +105,59 @@ export default async function PaginaPedidos() {
     return resto > 0 ? `${primeiros.join(", ")} e mais ${resto}` : primeiros.join(", ");
   }
 
+  const abertos = new Set<string>(STATUS_ABERTOS);
+  const emAndamento = meusPedidos.filter((p) => abertos.has(p.status));
+  const anteriores = meusPedidos.filter((p) => !abertos.has(p.status));
+
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <Link href="/conta" className="text-sm text-zinc-400 transition-colors hover:text-orange-500">
+    <section className="mx-auto max-w-3xl px-6 py-12">
+      <Link href="/conta" className="text-sm text-neutral-400 transition-colors hover:text-orange-500">
         ← Minha conta
       </Link>
 
-      <div className="mt-4 mb-8 flex items-end justify-between gap-4">
-        <h1 className="text-3xl font-bold text-white">Meus pedidos</h1>
-        {meusPedidos.length > 0 && (
-          <p className="text-sm text-zinc-400">
-            {meusPedidos.length} {meusPedidos.length === 1 ? "pedido" : "pedidos"}
-          </p>
-        )}
-      </div>
+      <p className={`${eyebrow} mt-6`}>Histórico</p>
+      <h1 className="mb-2 text-4xl font-extrabold text-white">
+        Meus <span className="text-orange-500">pedidos</span>
+      </h1>
+      <p className="mb-8 text-neutral-300">
+        {meusPedidos.length === 0
+          ? "Quando você fizer um pedido, ele aparece aqui."
+          : `${meusPedidos.length} ${meusPedidos.length === 1 ? "pedido" : "pedidos"} até agora.`}
+      </p>
 
       {meusPedidos.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/15 px-6 py-14 text-center">
-          <p className="text-lg font-semibold text-white">Você ainda não fez nenhum pedido</p>
-          <p className="mt-1 text-sm text-zinc-400">Quando fizer, ele vai aparecer aqui.</p>
-          <Link
-            href="/cardapio"
-            className="mt-6 inline-block rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
-          >
+        <div className="rounded-2xl border border-dashed border-white/15 px-6 py-14 text-center">
+          <p className="text-lg font-extrabold text-white">Você ainda não fez nenhum pedido</p>
+          <p className="mt-1 text-sm text-neutral-400">Que tal começar pelo cardápio?</p>
+          <Link href="/cardapio" className={`${botaoPrimario} mt-6`}>
             Ver cardápio
           </Link>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {meusPedidos.map((p) => {
-            const status = statusInfo[p.status];
-            return (
-              <li key={p.id}>
-                <Link
-                  href={`/pedido/${p.id}`}
-                  className="block rounded-xl border border-white/10 bg-neutral-900 p-5 transition-colors hover:border-orange-500/60"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-white">Pedido #{p.orderNumber}</p>
-                      <p className="text-xs text-zinc-500">
-                        {dataHora.format(p.createdAt)} ·{" "}
-                        {p.fulfillmentType === "delivery" ? "Entrega" : "Retirada"}
-                      </p>
-                    </div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${status.classe}`}>
-                      {status.rotulo}
-                    </span>
-                  </div>
+        <div className="space-y-10">
+          {emAndamento.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-xl font-extrabold text-white">Em andamento</h2>
+              <ul className="space-y-3">
+                {emAndamento.map((p) => (
+                  <CartaoPedido key={p.id} p={p} resumo={resumoDosItens(p.id)} />
+                ))}
+              </ul>
+            </div>
+          )}
 
-                  <p className="mt-3 text-sm text-zinc-300">{resumoDosItens(p.id)}</p>
-
-                  <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
-                    <span className="text-sm text-zinc-400">Total</span>
-                    <span className="font-semibold text-white">{formatCents(p.totalCents)}</span>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+          {anteriores.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-xl font-extrabold text-white">Anteriores</h2>
+              <ul className="space-y-3">
+                {anteriores.map((p) => (
+                  <CartaoPedido key={p.id} p={p} resumo={resumoDosItens(p.id)} />
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
-    </main>
+    </section>
   );
 }

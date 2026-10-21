@@ -80,3 +80,27 @@ export function EstadoVazio({
     </div>
   );
 }
+
+export function Aviso({
+  tom = "sucesso",
+  children,
+}: {
+  tom?: "sucesso" | "erro" | "info";
+  children: React.ReactNode;
+}) {
+  const estilos = {
+    sucesso: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+    erro: "border-red-500/30 bg-red-500/10 text-red-300",
+    info: "border-amber-500/30 bg-amber-500/10 text-amber-200",
+  };
+
+  return (
+    <p
+      role={tom === "erro" ? "alert" : "status"}
+      className={`mb-6 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${estilos[tom]}`}
+    >
+      <Icone nome={tom === "sucesso" ? "check" : "alerta"} className="mt-0.5 size-4 shrink-0" />
+      <span>{children}</span>
+    </p>
+  );
+}

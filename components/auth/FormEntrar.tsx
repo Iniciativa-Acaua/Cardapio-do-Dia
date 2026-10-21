@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
 import Campo from "@/components/auth/Campo";
+import { authClient } from "@/lib/auth-client";
+import { botaoPrimario, caixaErro } from "@/lib/estilos";
 
 export default function FormEntrar({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
@@ -33,7 +34,7 @@ export default function FormEntrar({ redirectTo }: { redirectTo: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} className="space-y-5">
       <Campo
         label="E-mail"
         name="email"
@@ -52,28 +53,21 @@ export default function FormEntrar({ redirectTo }: { redirectTo: string }) {
       />
 
       {erro && (
-        <div
-          role="alert"
-          className="rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-300"
-        >
+        <div role="alert" className={caixaErro}>
           {erro}
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={carregando}
-        className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <button type="submit" disabled={carregando} className={`${botaoPrimario} w-full`}>
         {carregando && (
           <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
         )}
         {carregando ? "Entrando..." : "Entrar"}
       </button>
 
-      <p className="text-center text-sm text-zinc-400">
+      <p className="text-center text-sm text-neutral-400">
         Ainda não tem conta?{" "}
-        <Link href="/cadastro" className="font-medium text-orange-500 hover:underline">
+        <Link href="/cadastro" className="font-semibold text-orange-500 hover:underline">
           Criar conta
         </Link>
       </p>

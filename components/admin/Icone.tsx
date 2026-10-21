@@ -5,6 +5,7 @@ const formas = {
       <rect width="7" height="5" x="14" y="3" rx="1" />
       <rect width="7" height="9" x="14" y="12" rx="1" />
       <rect width="7" height="5" x="3" y="16" rx="1" />
+      
     </>
   ),
   pedidos: (
@@ -81,6 +82,31 @@ const formas = {
     </>
   ),
   check: <path d="M20 6 9 17l-5-5" />,
+
+  mais: <path d="M5 12h14M12 5v14" />,
+  estrela: (
+    <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+  ),
+  editar: (
+    <>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </>
+  ),
+  etiqueta: (
+    <>
+      <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" />
+      <path d="M7 7h.01" />
+    </>
+  ),
+  
+  alerta: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v4M12 16h.01" />
+    </>
+  ),
+
   voltar: (
     <>
       <path d="m12 19-7-7 7-7" />

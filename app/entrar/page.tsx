@@ -19,7 +19,9 @@ export default async function PaginaEntrar({
 
   return (
     <AuthLayout
-      titulo="Bem-vindo de volta"
+      rotulo="Sua conta"
+      titulo="Bem-vindo"
+      destaque="de volta"
       subtitulo="Entre para acompanhar seus pedidos e pedir mais rápido."
     >
       <FormEntrar redirectTo={redirectTo} />

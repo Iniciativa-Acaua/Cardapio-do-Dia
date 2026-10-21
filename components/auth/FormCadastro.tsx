@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
 import Campo from "@/components/auth/Campo";
+import { authClient } from "@/lib/auth-client";
+import { botaoPrimario, caixaErro } from "@/lib/estilos";
 
 export default function FormCadastro({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
@@ -49,14 +50,8 @@ export default function FormCadastro({ redirectTo }: { redirectTo: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
-      <Campo
-        label="Nome"
-        name="nome"
-        autoComplete="name"
-        placeholder="Seu nome"
-        erro={erros.nome}
-      />
+    <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <Campo label="Nome" name="nome" autoComplete="name" placeholder="Seu nome" erro={erros.nome} />
       <Campo
         label="E-mail"
         name="email"
@@ -83,28 +78,21 @@ export default function FormCadastro({ redirectTo }: { redirectTo: string }) {
       />
 
       {erroGeral && (
-        <div
-          role="alert"
-          className="rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-300"
-        >
+        <div role="alert" className={caixaErro}>
           {erroGeral}
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={carregando}
-        className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <button type="submit" disabled={carregando} className={`${botaoPrimario} w-full`}>
         {carregando && (
           <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
         )}
         {carregando ? "Criando conta..." : "Criar conta"}
       </button>
 
-      <p className="text-center text-sm text-zinc-400">
+      <p className="text-center text-sm text-neutral-400">
         Já tem conta?{" "}
-        <Link href="/entrar" className="font-medium text-orange-500 hover:underline">
+        <Link href="/entrar" className="font-semibold text-orange-500 hover:underline">
           Entrar
         </Link>
       </p>

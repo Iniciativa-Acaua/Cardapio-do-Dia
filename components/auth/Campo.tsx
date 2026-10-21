@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { campoBase, campoErro, campoNormal } from "@/lib/estilos";
 
 type Props = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
@@ -22,8 +23,8 @@ export default function Campo({
   const ehSenha = type === "password";
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-zinc-200">
+    <div>
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-neutral-200">
         {label}
       </label>
 
@@ -33,11 +34,7 @@ export default function Campo({
           type={ehSenha && visivel ? "text" : type}
           aria-invalid={erro ? true : undefined}
           aria-describedby={erro || dica ? descId : undefined}
-          className={`w-full rounded-lg border bg-neutral-900 px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:ring-2 ${
-            erro
-              ? "border-red-500 focus:ring-red-500/40"
-              : "border-white/10 focus:border-orange-500 focus:ring-orange-500/40"
-          } ${ehSenha ? "pr-20" : ""} ${className}`}
+          className={`${campoBase} ${erro ? campoErro : campoNormal} ${ehSenha ? "pr-24" : ""} ${className}`}
           {...props}
         />
 
@@ -46,7 +43,7 @@ export default function Campo({
             type="button"
             onClick={() => setVisivel((v) => !v)}
             aria-label={visivel ? "Ocultar senha" : "Mostrar senha"}
-            className="absolute inset-y-0 right-3 text-xs font-medium text-zinc-400 transition-colors hover:text-orange-500"
+            className="absolute inset-y-0 right-4 text-xs font-semibold text-neutral-400 transition-colors hover:text-orange-500"
           >
             {visivel ? "Ocultar" : "Mostrar"}
           </button>
@@ -54,7 +51,7 @@ export default function Campo({
       </div>
 
       {(erro || dica) && (
-        <p id={descId} className={`text-xs ${erro ? "text-red-400" : "text-zinc-400"}`}>
+        <p id={descId} className={`mt-1 text-xs ${erro ? "text-red-400" : "text-neutral-400"}`}>
           {erro ?? dica}
         </p>
       )}
