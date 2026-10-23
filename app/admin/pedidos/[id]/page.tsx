@@ -102,7 +102,7 @@ export default async function PedidoAdmin({ params }: { params: Promise<{ id: st
 
   return (
     <main>
-      {onlineNaoPago && <AtualizarAutomaticamente intervaloMs={10000} />}
+      {onlineNaoPago && <AtualizarAutomaticamente />}
 
       <CabecalhoPagina
         voltar={{ href: "/admin/pedidos", rotulo: "Pedidos" }}

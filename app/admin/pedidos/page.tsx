@@ -126,7 +126,7 @@ export default async function AdminPedidos({
 
   return (
     <main>
-      <AtualizarAutomaticamente intervaloMs={15000} maxMs={12 * 60 * 60 * 1000} />
+      <AtualizarAutomaticamente />
 
       <CabecalhoPagina
         titulo="Pedidos"
