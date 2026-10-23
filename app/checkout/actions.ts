@@ -3,7 +3,7 @@
 
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, count, eq, gte, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import {
@@ -100,6 +100,25 @@ export async function createOrder(
     if (!data.number) errs.number = "Informe o número.";
     if (!z.uuid().safeParse(data.zoneId).success) errs.zoneId = "Escolha o bairro de entrega.";
     if (Object.keys(errs).length) return { fieldErrors: errs, values };
+  }
+
+  // 2b) proteção básica: muitos pedidos ainda pendentes com o mesmo telefone na última hora
+  const umaHoraAtras = new Date(Date.now() - 60 * 60 * 1000);
+  const [{ total: recentes }] = await db
+    .select({ total: count() })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.customerPhone, data.customerPhone),
+        eq(orders.status, "pending"),
+        gte(orders.createdAt, umaHoraAtras)
+      )
+    );
+  if (recentes >= 5) {
+    return {
+      error: "Você já tem pedidos aguardando confirmação. Aguarde um pouco antes de fazer outro.",
+      values,
+    };
   }
 
   // 3) itens do carrinho: só IDs e quantidades vêm do navegador

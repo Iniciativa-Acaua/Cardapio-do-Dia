@@ -1,28 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export default function AtualizarAutomaticamente({
-  intervaloMs = 5000,
-  maxMs = 10 * 60 * 1000,
-}: {
-  intervaloMs?: number;
-  maxMs?: number;
-}) {
+const INTERVALO_MS = 5000;
+const DURACAO_MAXIMA_MS = 5 * 60 * 1000;
+
+export default function AtualizarAutomaticamente() {
   const router = useRouter();
 
   useEffect(() => {
     const inicio = Date.now();
-    const id = setInterval(() => {
-      if (Date.now() - inicio > maxMs) {
-        clearInterval(id);
+    const timer = setInterval(() => {
+      if (Date.now() - inicio > DURACAO_MAXIMA_MS) {
+        clearInterval(timer);
         return;
       }
-      router.refresh();
-    }, intervaloMs);
-    return () => clearInterval(id);
-  }, [router, intervaloMs, maxMs]);
+      if (document.visibilityState === "visible") router.refresh();
+    }, INTERVALO_MS);
+    return () => clearInterval(timer);
+  }, [router]);
 
   return null;
 }

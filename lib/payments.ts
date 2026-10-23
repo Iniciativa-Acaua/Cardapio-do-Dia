@@ -22,6 +22,9 @@ export async function criarCobrancaOnline(params: {
 
   // o Mercado Pago só consegue avisar o seu servidor se ele for público e usar https
   const publico = siteUrl.startsWith("https://");
+  if (!publico) {
+    console.warn("SITE_URL sem https: webhook e retorno automático ficam desativados.");
+  }
   const agora = Date.now();
   const voltar = `${siteUrl}/pedido/${params.orderId}`;
 
@@ -83,45 +86,71 @@ export type PagamentoMP = {
   date_approved?: string;
 };
 
-// usada pelo webhook e pela conferência da página: pode rodar várias vezes sem duplicar nada
+// usada pelo webhook, pelo cron e pela conferência da página: pode rodar várias vezes sem duplicar nada
 export async function aplicarPagamento(pagamento: PagamentoMP) {
   const orderId = pagamento.external_reference;
   if (!orderId || !z.uuid().safeParse(orderId).success) return;
 
+  const paymentId = pagamento.id != null ? String(pagamento.id) : null;
   const valorCents = Math.round((pagamento.transaction_amount ?? 0) * 100);
   const novoStatus = mapear(pagamento.status);
 
   await db.transaction(async (tx) => {
     const [row] = await tx
-      .select({ id: payments.id, status: payments.status, amountCents: payments.amountCents })
+      .select({
+        id: payments.id,
+        status: payments.status,
+        amountCents: payments.amountCents,
+        providerRef: payments.providerRef,
+      })
       .from(payments)
       .where(and(eq(payments.orderId, orderId), eq(payments.method, "online")))
       .for("update") // evita que dois processos tratem o mesmo pagamento ao mesmo tempo
       .limit(1);
 
     if (!row) {
-      console.warn("Pagamento MP: pedido sem pagamento online", orderId);
+      console.warn("Pagamento MP: pedido sem pagamento online", { orderId, paymentId });
       return;
     }
     if (row.amountCents !== valorCents) {
       console.error("Pagamento MP: valor divergente", {
         orderId,
+        paymentId,
         esperado: row.amountCents,
         recebido: valorCents,
       });
       return;
     }
-    // idempotência: estornado é final; pago só muda se for estornado
+
+    // estornado é final
     if (row.status === "refunded") return;
-    if (row.status === "paid" && novoStatus !== "refunded") return;
+
+    if (row.status === "paid") {
+      // já está pago: se o aviso é de OUTRO pagamento do mesmo pedido, não mexe no original
+      const outroPagamento = !!paymentId && !!row.providerRef && row.providerRef !== paymentId;
+      if (outroPagamento) {
+        if (novoStatus === "paid") {
+          console.error("PAGAMENTO DUPLICADO: estornar um deles no painel do Mercado Pago", {
+            orderId,
+            pagamentoOriginal: row.providerRef,
+            pagamentoDuplicado: paymentId,
+          });
+        }
+        return;
+      }
+      // pago só muda se o MESMO pagamento for estornado
+      if (novoStatus !== "refunded") return;
+    }
 
     await tx
       .update(payments)
       .set({
         status: novoStatus,
-        providerRef: pagamento.id != null ? String(pagamento.id) : null,
+        providerRef: paymentId ?? row.providerRef,
         providerMethod: pagamento.payment_type_id ?? null,
-        paidAt: novoStatus === "paid" ? new Date(pagamento.date_approved ?? Date.now()) : null,
+        ...(novoStatus === "paid"
+          ? { paidAt: new Date(pagamento.date_approved ?? Date.now()) }
+          : {}),
       })
       .where(eq(payments.id, row.id));
 
@@ -140,7 +169,10 @@ export async function aplicarPagamento(pagamento: PagamentoMP) {
           note: "Pagamento online aprovado.",
         });
       } else if (pedido?.status === "cancelled") {
-        console.warn("Pagamento MP: aprovado em pedido cancelado, reembolsar", orderId);
+        console.error("Pagamento MP: aprovado em pedido CANCELADO, reembolsar ou reativar", {
+          orderId,
+          paymentId,
+        });
       }
     }
   });
@@ -153,5 +185,15 @@ export async function sincronizarPagamentoDoPedido(orderId: string) {
   });
   const lista = resposta.results ?? [];
   if (lista.length === 0) return;
-  await aplicarPagamento(lista.find((p) => p.status === "approved") ?? lista[0]);
+
+  // aprovado vence recusado; do mais antigo para o mais novo, assim o duplicado é que fica marcado
+  const aprovados = lista.filter((p) => p.status === "approved").reverse();
+  if (aprovados.length > 0) {
+    for (const p of aprovados) await aplicarPagamento(p);
+    return;
+  }
+
+  // sem aprovado: um Pix ainda pendente vale mais do que uma tentativa recusada
+  const pendente = lista.find((p) => p.status === "pending" || p.status === "in_process");
+  await aplicarPagamento(pendente ?? lista[0]);
 }

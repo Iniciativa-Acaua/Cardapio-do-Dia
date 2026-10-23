@@ -248,6 +248,20 @@ export default async function PedidoPage({ params, searchParams }: Props) {
         >
           Voltar ao cardápio
         </Link>
+        <Link
+          href="/"
+          className="rounded-full border border-white/20 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+        >
+          Ir para o início
+        </Link>
+        {session && (
+          <Link
+            href="/conta/pedidos"
+            className="rounded-full border border-white/20 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+          >
+            Meus pedidos
+          </Link>
+        )}
       </div>
     </section>
   );
